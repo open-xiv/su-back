@@ -19,6 +19,7 @@ type User struct {
 
 type Fight struct {
 	ID           primitive.ObjectID `json:"id" bson:"_id"`
+	UserID       primitive.ObjectID `json:"user_id" bson:"user_id"`
 	FightRecord  FightRecord        `json:"fight_record" bson:"fight_record"`
 	ServerRecord ServerRecord       `json:"server_record" bson:"server_record"`
 }

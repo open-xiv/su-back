@@ -1,9 +1,11 @@
 package fight
 
 import (
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/open-xiv/su-back/config"
 	rmongo "github.com/open-xiv/su-back/internal/repo/mongo"
+	"github.com/open-xiv/su-back/internal/tools"
 	"github.com/open-xiv/su-back/pkg/model"
 	"go.uber.org/zap"
 	"net/http"
@@ -17,6 +19,15 @@ func Push(c echo.Context) error {
 		return err
 	}
 	fight.ServerRecord.IP = c.RealIP()
+
+	// check token
+	uToken := c.Get("user").(*jwt.Token)
+	claims := uToken.Claims.(*tools.JwtCustomClaims)
+	uId := claims.ID
+	if uId != fight.UserID {
+		zap.L().Debug("permission denied (token != id)")
+		return echo.ErrUnauthorized
+	}
 
 	// mongo
 	client := config.MongoClient

@@ -10,6 +10,14 @@ import (
 )
 
 func InitUser(coll *mongo.Collection, user model.User) (primitive.ObjectID, error) {
+	// check name unique
+	_, err := PullUserByName(coll, user.Person.Name)
+	if err == nil {
+		zap.L().Debug("user name already exists")
+		return primitive.NilObjectID, err
+	}
+
+	// create new user
 	user.ID = primitive.NewObjectID()
 	user.ServerRecord.Update = time.Now().Unix()
 	rst, err := coll.InsertOne(nil, user)
@@ -24,6 +32,17 @@ func InitUser(coll *mongo.Collection, user model.User) (primitive.ObjectID, erro
 func PullUser(coll *mongo.Collection, id primitive.ObjectID) (model.User, error) {
 	var user model.User
 	err := coll.FindOne(nil, bson.M{"_id": id}).Decode(&user)
+	if err != nil {
+		zap.L().Debug("failed to find user", zap.Error(err))
+		return model.User{}, err
+	}
+	zap.L().Debug("user found", zap.Any("id", user.ID))
+	return user, err
+}
+
+func PullUserByName(coll *mongo.Collection, name string) (model.User, error) {
+	var user model.User
+	err := coll.FindOne(nil, bson.M{"person.name": name}).Decode(&user)
 	if err != nil {
 		zap.L().Debug("failed to find user", zap.Error(err))
 		return model.User{}, err
@@ -63,5 +82,26 @@ func PatchUser(coll *mongo.Collection, id primitive.ObjectID, patch bson.M) erro
 		return err
 	}
 	zap.L().Debug("user patched", zap.Any("id", id), zap.Any("rst", rst))
+	return err
+}
+
+func InsertFight(coll *mongo.Collection, id primitive.ObjectID, fightId primitive.ObjectID) error {
+	// update server record
+	patch := bson.M{"$set": bson.M{"record.update": time.Now().Unix()}}
+	rst, err := coll.UpdateOne(nil, bson.M{"_id": id}, patch)
+	if err != nil {
+		zap.L().Debug("failed to patch user", zap.Error(err))
+		return err
+	}
+
+	// update fights
+	patch = bson.M{"$push": bson.M{"fight_ids": fightId}}
+	// update user
+	rst, err = coll.UpdateOne(nil, bson.M{"_id": id}, patch)
+	if err != nil {
+		zap.L().Debug("failed to insert fight", zap.Error(err))
+		return err
+	}
+	zap.L().Debug("fight inserted", zap.Any("id", id), zap.Any("rst", rst))
 	return err
 }

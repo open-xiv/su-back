@@ -5,6 +5,7 @@ import (
 	"github.com/open-xiv/su-back/config"
 	rmongo "github.com/open-xiv/su-back/internal/repo/mongo"
 	"github.com/open-xiv/su-back/pkg/model"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -12,11 +13,22 @@ import (
 func Init(c echo.Context) error {
 	// bind user
 	var user model.User
-	if err := c.Bind(&user); err != nil {
+	if err := c.Bind(&user.Person); err != nil {
 		zap.L().Debug("failed to bind user", zap.Error(err))
 		return err
 	}
 	user.ServerRecord.IP = c.RealIP()
+
+	// check empty key
+	for _, x := range []string{user.Person.Name, user.Person.Email, user.Person.Password} {
+		if x == "" {
+			zap.L().Debug("empty key")
+			return echo.ErrBadRequest
+		}
+	}
+
+	// reset fights id
+	user.FightIDs = []primitive.ObjectID{}
 
 	// mongo
 	client := config.MongoClient

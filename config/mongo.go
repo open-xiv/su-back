@@ -14,7 +14,7 @@ func ConnectDB() *mongo.Client {
 	mongoURI := os.Getenv("MONGO_URI")
 	client, err := mongo.NewClient(options.Client().ApplyURI(mongoURI))
 	if err != nil {
-		zap.L().Error("failed to create mongo client", zap.Error(err))
+		zap.L().Fatal("failed to create mongo client", zap.Error(err))
 		return nil
 	}
 
@@ -23,14 +23,14 @@ func ConnectDB() *mongo.Client {
 	defer cancel()
 	err = client.Connect(ctx)
 	if err != nil {
-		zap.L().Error("failed to connect to mongo", zap.Error(err))
+		zap.L().Fatal("failed to connect to mongo", zap.Error(err))
 		return nil
 	}
 
 	// ping
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		zap.L().Error("failed to ping mongo", zap.Error(err))
+		zap.L().Fatal("failed to ping mongo", zap.Error(err))
 		return nil
 	}
 	zap.L().Debug("connected to mongo")

@@ -1,19 +1,21 @@
 package main
 
 import (
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/open-xiv/su-back/config"
 	"github.com/open-xiv/su-back/internal/api/fight"
 	"github.com/open-xiv/su-back/internal/api/server"
 	"github.com/open-xiv/su-back/internal/api/user"
+	"github.com/open-xiv/su-back/internal/tools"
 	"go.uber.org/zap"
 )
 
 func main() {
 	// echo root
 	e := echo.New()
-	e.Debug = true
+	//e.Debug = true
 	e.HideBanner = true
 
 	// logger
@@ -40,10 +42,10 @@ func main() {
 	// middleware
 	// remove trailing slash
 	e.Pre(middleware.RemoveTrailingSlash())
-	// rate limit
-	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(10)))
 	// cors
 	e.Use(middleware.CORS())
+	// recover
+	e.Use(middleware.Recover())
 
 	// connect to mongo
 	config.ConnectDB()
@@ -52,20 +54,40 @@ func main() {
 	e.Use(middleware.Static("./web"))
 
 	// restful api (golang backend)
+	// api (backend)
 	b := e.Group("/api")
+
+	// public api
+	pub := b.Group("/public")
 	// server status
-	b.GET("/status", server.Status)
+	pub.GET("/status", server.Status)
+	// user fights record
+	pub.GET("/user/:name/fights", user.PullRecords)
+	// fight record
+	pub.GET("/fight/:id", fight.Pull)
+
+	// protect api
+	pro := b.Group("/protect")
+	pro.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(5)))
 	// user
-	e.POST("/user", user.Init)
-	e.GET("/user/:id", user.Pull)
-	e.PUT("/user/:id", user.Push)
-	e.DELETE("/user/:id", user.Remove)
-	e.PATCH("/user/:id", user.Patch)
+	pro.POST("/user", user.Init)    // create user
+	pro.POST("/login", tools.Login) // login -> token
+
+	// private api
+	pri := b.Group("/private")
+	pri.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(20)))
+	pri.Use(echojwt.WithConfig(tools.CreateCustomClaims()))
+	// user
+	priUser := pri.Group("/user")
+	priUser.GET("/:id", user.Pull)
+	priUser.PUT("/:id", user.Push)
+	priUser.DELETE("/:id", user.Remove)
+	priUser.PATCH("/:id", user.Patch)
 	// fight
-	e.POST("/fight", fight.Init)
-	e.GET("/fight/:id", fight.Pull)
-	e.PUT("/fight/:id", fight.Push)
-	e.DELETE("/fight/:id", fight.Remove)
+	priFight := pri.Group("/fight")
+	priFight.POST("", fight.Init)
+	priFight.PUT("/:id", fight.Push)
+	priFight.DELETE("/:id", fight.Remove)
 
 	// echo server
 	e.Logger.Fatal(e.Start(":8123"))

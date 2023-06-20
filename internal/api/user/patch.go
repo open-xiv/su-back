@@ -1,6 +1,7 @@
 package user
 
 import (
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/open-xiv/su-back/config"
 	rmongo "github.com/open-xiv/su-back/internal/repo/mongo"
@@ -16,6 +17,15 @@ func Patch(c echo.Context) error {
 	if err != nil {
 		zap.L().Debug("failed to parse id", zap.Error(err))
 		return err
+	}
+
+	// check token
+	uToken := c.Get("user").(*jwt.Token)
+	claims := uToken.Claims.(*tools.JwtCustomClaims)
+	uId := claims.ID
+	if uId != id {
+		zap.L().Debug("permission denied (token != id)")
+		return echo.ErrUnauthorized
 	}
 
 	// bind user
@@ -34,6 +44,43 @@ func Patch(c echo.Context) error {
 	err = rmongo.PatchUser(coll, id, m)
 	if err != nil {
 		zap.L().Debug("failed to patch user", zap.Error(err))
+		return err
+	}
+
+	// return {"success": bool}
+	return c.JSONPretty(http.StatusOK, map[string]bool{"success": true}, "  ")
+}
+
+func _(c echo.Context) error {
+	// get user id
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		zap.L().Debug("failed to parse id", zap.Error(err))
+		return err
+	}
+
+	// get fight id
+	fId, err := primitive.ObjectIDFromHex(c.Param("fight_id"))
+	if err != nil {
+		zap.L().Debug("failed to parse fight id", zap.Error(err))
+		return err
+	}
+
+	// check token
+	uToken := c.Get("user").(*jwt.Token)
+	claims := uToken.Claims.(*tools.JwtCustomClaims)
+	uId := claims.ID
+	if uId != id {
+		zap.L().Debug("permission denied (token != id)")
+		return echo.ErrUnauthorized
+	}
+
+	// mongo
+	client := config.MongoClient
+	coll := client.Database("tale").Collection("users")
+	err = rmongo.InsertFight(coll, id, fId)
+	if err != nil {
+		zap.L().Debug("failed to insert fight", zap.Error(err))
 		return err
 	}
 
