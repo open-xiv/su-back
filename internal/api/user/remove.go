@@ -3,9 +3,9 @@ package user
 import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
-	"github.com/open-xiv/su-back/config"
 	rmongo "github.com/open-xiv/su-back/internal/repo/mongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -28,7 +28,7 @@ func Remove(c echo.Context) error {
 	}
 
 	// mongo
-	client := config.MongoClient
+	client := c.Get("mongo").(*mongo.Client)
 	coll := client.Database("tale").Collection("users")
 	if err := rmongo.RemoveUser(coll, id); err != nil {
 		zap.L().Debug("failed to remove user", zap.Error(err))

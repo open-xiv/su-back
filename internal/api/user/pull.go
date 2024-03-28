@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
-	"github.com/open-xiv/su-back/config"
 	rmongo "github.com/open-xiv/su-back/internal/repo/mongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -19,7 +19,7 @@ func Pull(c echo.Context) error {
 	uId := claims.ID
 
 	// mongo
-	client := config.MongoClient
+	client := c.Get("mongo").(*mongo.Client)
 	coll := client.Database("subook").Collection("users")
 	user, err := rmongo.PullUser(coll, uId)
 	if err != nil {
@@ -49,7 +49,7 @@ func PullByID(c echo.Context) error {
 	}
 
 	// mongo
-	client := config.MongoClient
+	client := c.Get("mongo").(*mongo.Client)
 	coll := client.Database("subook").Collection("users")
 	user, err := rmongo.PullUser(coll, id)
 	if err != nil {
@@ -66,7 +66,7 @@ func PullRecords(c echo.Context) error {
 	name := c.Param("name")
 
 	// mongo
-	client := config.MongoClient
+	client := c.Get("mongo").(*mongo.Client)
 	coll := client.Database("subook").Collection("users")
 	user, err := rmongo.PullUserByName(coll, name)
 	if err != nil {
@@ -83,7 +83,7 @@ func PullMeta(c echo.Context) error {
 	name := c.Param("name")
 
 	// mongo
-	client := config.MongoClient
+	client := c.Get("mongo").(*mongo.Client)
 	coll := client.Database("subook").Collection("users")
 	user, err := rmongo.PullUserByName(coll, name)
 	if err != nil {
@@ -100,7 +100,7 @@ func PullAvatar(c echo.Context) error {
 	name := c.Param("name")
 
 	// mongo
-	client := config.MongoClient
+	client := c.Get("mongo").(*mongo.Client)
 	coll := client.Database("subook").Collection("users")
 	user, err := rmongo.PullUserByName(coll, name)
 	if err != nil {
@@ -112,7 +112,7 @@ func PullAvatar(c echo.Context) error {
 	avatarURL := user.Person.AvatarURL
 	if avatarURL == "" {
 		// use gravatar (email md5)
-		avatarURL = "https://www.gravatar.com/avatar/" + fmt.Sprintf("%x", md5.Sum([]byte(user.Person.Email)))
+		avatarURL = "https://www.gravatar.com/avatar/" + fmt.Sprintf("%x", md5.Sum([]byte(user.Person.Email))) + "?d=identicon"
 	}
 
 	// return user meta

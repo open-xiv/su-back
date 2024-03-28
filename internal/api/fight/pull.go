@@ -2,9 +2,9 @@ package fight
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/open-xiv/su-back/config"
 	rmongo "github.com/open-xiv/su-back/internal/repo/mongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -18,7 +18,7 @@ func Pull(c echo.Context) error {
 	}
 
 	// mongo
-	client := config.MongoClient
+	client := c.Get("mongo").(*mongo.Client)
 	coll := client.Database("subook").Collection("fights")
 	fight, err := rmongo.PullFight(coll, id)
 	if err != nil {

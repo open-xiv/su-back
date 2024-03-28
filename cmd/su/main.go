@@ -47,14 +47,17 @@ func main() {
 	e.Use(middleware.Recover())
 
 	// connect to mongo
-	config.ConnectDB()
-
-	// static files (vue frontend)
-	e.Use(middleware.Static("./web"))
+	mongoClient := config.ConnectDB()
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set("mongo", mongoClient)
+			return next(c)
+		}
+	})
 
 	// restful api (golang backend)
 	// api (backend)
-	b := e.Group("/api")
+	b := e.Group("")
 
 	// public api
 	pub := b.Group("/public")

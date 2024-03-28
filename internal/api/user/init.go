@@ -2,10 +2,10 @@ package user
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/open-xiv/su-back/config"
 	rmongo "github.com/open-xiv/su-back/internal/repo/mongo"
 	"github.com/open-xiv/su-back/pkg/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -32,7 +32,7 @@ func Init(c echo.Context) error {
 	user.Meta.Total = 2000
 
 	// mongo
-	client := config.MongoClient
+	client := c.Get("mongo").(*mongo.Client)
 	coll := client.Database("subook").Collection("users")
 	id, err := rmongo.InitUser(coll, user)
 	if err != nil {
