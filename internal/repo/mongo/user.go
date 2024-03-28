@@ -1,6 +1,8 @@
 package rmongo
 
 import (
+	"errors"
+	"github.com/open-xiv/su-back/internal/tools"
 	"github.com/open-xiv/su-back/pkg/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,12 +16,16 @@ func InitUser(coll *mongo.Collection, user model.User) (primitive.ObjectID, erro
 	_, err := PullUserByName(coll, user.Person.Name)
 	if err == nil {
 		zap.L().Debug("user name already exists")
-		return primitive.NilObjectID, err
+		return primitive.NilObjectID, errors.New("user name already exists")
 	}
 
 	// create new user
 	user.ID = primitive.NewObjectID()
 	user.ServerRecord.Update = time.Now().Unix()
+	// random string with length 12
+	user.Person.Key = tools.RandStringBytes(12)
+
+	// insert
 	rst, err := coll.InsertOne(nil, user)
 	if err != nil {
 		zap.L().Debug("failed to insert user", zap.Error(err))

@@ -21,7 +21,7 @@ func Patch(c echo.Context) error {
 
 	// check token
 	uToken := c.Get("user").(*jwt.Token)
-	claims := uToken.Claims.(*tools.JwtCustomClaims)
+	claims := uToken.Claims.(*JwtCustomClaims)
 	uId := claims.ID
 	if uId != id {
 		zap.L().Debug("permission denied (token != id)")
@@ -68,7 +68,7 @@ func _(c echo.Context) error {
 
 	// check token
 	uToken := c.Get("user").(*jwt.Token)
-	claims := uToken.Claims.(*tools.JwtCustomClaims)
+	claims := uToken.Claims.(*JwtCustomClaims)
 	uId := claims.ID
 	if uId != id {
 		zap.L().Debug("permission denied (token != id)")

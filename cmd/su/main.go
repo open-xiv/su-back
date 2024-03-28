@@ -8,7 +8,6 @@ import (
 	"github.com/open-xiv/su-back/internal/api/fight"
 	"github.com/open-xiv/su-back/internal/api/server"
 	"github.com/open-xiv/su-back/internal/api/user"
-	"github.com/open-xiv/su-back/internal/tools"
 	"go.uber.org/zap"
 )
 
@@ -63,6 +62,8 @@ func main() {
 	pub.GET("/status", server.Status)
 	// user fights record
 	pub.GET("/user/:name/fights", user.PullRecords)
+	pub.GET("/user/:name/meta", user.PullMeta)
+	pub.GET("/user/:name/avatar", user.PullAvatar)
 	// fight record
 	pub.GET("/fight/:id", fight.Pull)
 
@@ -70,16 +71,17 @@ func main() {
 	pro := b.Group("/protect")
 	pro.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(5)))
 	// user
-	pro.POST("/user", user.Init)    // create user
-	pro.POST("/login", tools.Login) // login -> token
+	pro.POST("/user", user.Init)   // create user
+	pro.POST("/login", user.Login) // login -> token
 
 	// private api
 	pri := b.Group("/private")
 	pri.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(20)))
-	pri.Use(echojwt.WithConfig(tools.CreateCustomClaims()))
+	pri.Use(echojwt.WithConfig(user.CreateCustomClaims()))
 	// user
 	priUser := pri.Group("/user")
-	priUser.GET("/:id", user.Pull)
+	priUser.GET("", user.Pull)
+	priUser.GET("/:id", user.PullByID)
 	priUser.PUT("/:id", user.Push)
 	priUser.DELETE("/:id", user.Remove)
 	priUser.PATCH("/:id", user.Patch)

@@ -4,8 +4,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/open-xiv/su-back/config"
+	"github.com/open-xiv/su-back/internal/api/user"
 	rmongo "github.com/open-xiv/su-back/internal/repo/mongo"
-	"github.com/open-xiv/su-back/internal/tools"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 	"net/http"
@@ -30,7 +30,7 @@ func Remove(c echo.Context) error {
 
 	// check token
 	uToken := c.Get("user").(*jwt.Token)
-	claims := uToken.Claims.(*tools.JwtCustomClaims)
+	claims := uToken.Claims.(*user.JwtCustomClaims)
 	uId := claims.ID
 	if uId != fight.UserID {
 		zap.L().Debug("permission denied (token != id)")

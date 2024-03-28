@@ -1,4 +1,4 @@
-package tools
+package user
 
 import (
 	"github.com/golang-jwt/jwt/v5"
@@ -38,6 +38,48 @@ func Login(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 	if user.Person.Password != password {
+		return echo.ErrUnauthorized
+	}
+
+	// set custom claims
+	claims := &JwtCustomClaims{
+		user.ID,
+		user.Person.Name,
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 7)),
+		},
+	}
+
+	// create token with claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// generate encoded token and send it as message
+	t, err := token.SignedString([]byte(os.Getenv("SIGN_KEY")))
+	if err != nil {
+		return err
+	}
+
+	return c.JSONPretty(http.StatusOK, echo.Map{"token": t}, " ")
+}
+
+func LoginByKey(c echo.Context) error {
+	// get name & key
+	var person model.PersonInfo
+	if err := c.Bind(&person); err != nil {
+		zap.L().Debug("failed to bind person", zap.Error(err))
+		return err
+	}
+	name := person.Name
+	key := person.Key
+
+	// check in mongo
+	client := config.MongoClient
+	coll := client.Database("subook").Collection("users")
+	user, err := rmongo.PullUserByName(coll, name)
+	if err != nil {
+		return echo.ErrUnauthorized
+	}
+	if user.Person.Key != key {
 		return echo.ErrUnauthorized
 	}
 

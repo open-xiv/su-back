@@ -5,7 +5,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/open-xiv/su-back/config"
 	rmongo "github.com/open-xiv/su-back/internal/repo/mongo"
-	"github.com/open-xiv/su-back/internal/tools"
 	"github.com/open-xiv/su-back/pkg/model"
 	"go.uber.org/zap"
 	"net/http"
@@ -22,7 +21,7 @@ func Push(c echo.Context) error {
 
 	// check token
 	uToken := c.Get("user").(*jwt.Token)
-	claims := uToken.Claims.(*tools.JwtCustomClaims)
+	claims := uToken.Claims.(*JwtCustomClaims)
 	uId := claims.ID
 	if uId != user.ID {
 		zap.L().Debug("permission denied (token != id)")

@@ -7,12 +7,18 @@ type PersonInfo struct {
 	Email     string `json:"email" bson:"email"`
 	AvatarURL string `json:"avatar_url" bson:"avatar_url"`
 	Password  string `json:"password,omitempty" bson:"password"`
-	Token     string `json:"token,omitempty" bson:"token"`
+	Key       string `json:"key,omitempty" bson:"key"`
+}
+
+type SuMeta struct {
+	Base  int `json:"base" bson:"base"`
+	Total int `json:"total" bson:"total"`
 }
 
 type User struct {
 	ID           primitive.ObjectID   `json:"id" bson:"_id"`
 	Person       PersonInfo           `json:"person" bson:"person"`
+	Meta         SuMeta               `json:"meta" bson:"meta"`
 	FightIDs     []primitive.ObjectID `json:"fight_ids" bson:"fight_ids"`
 	ServerRecord ServerRecord         `json:"server_record" bson:"server_record"`
 }

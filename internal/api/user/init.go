@@ -27,8 +27,9 @@ func Init(c echo.Context) error {
 		}
 	}
 
-	// reset fights id
+	// reset fights id & meta
 	user.FightIDs = []primitive.ObjectID{}
+	user.Meta.Total = 2000
 
 	// mongo
 	client := config.MongoClient
@@ -36,9 +37,12 @@ func Init(c echo.Context) error {
 	id, err := rmongo.InitUser(coll, user)
 	if err != nil {
 		zap.L().Debug("failed to init user", zap.Error(err))
+		if err.Error() == "user name already exists" {
+			return c.JSONPretty(http.StatusForbidden, echo.Map{"error": err.Error()}, "  ")
+		}
 		return err
 	}
 
 	// return {"id": id}
-	return c.JSONPretty(http.StatusOK, map[string]interface{}{"id": id}, "  ")
+	return c.JSONPretty(http.StatusOK, echo.Map{"id": id}, "  ")
 }
