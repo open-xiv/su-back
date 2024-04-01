@@ -14,11 +14,12 @@ import (
 func main() {
 	// echo root
 	e := echo.New()
-	//e.Debug = true
 	e.HideBanner = true
 
 	// logger
-	logger, _ := zap.NewDevelopment()
+	zapConfig := zap.NewProductionConfig()
+	zapConfig.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
+	logger, _ := zapConfig.Build()
 	defer func(logger *zap.Logger) {
 		err := logger.Sync()
 		if err != nil {
@@ -74,8 +75,9 @@ func main() {
 	pro := b.Group("/protect")
 	pro.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(5)))
 	// user
-	pro.POST("/user", user.Init)   // create user
-	pro.POST("/login", user.Login) // login -> token
+	pro.POST("/user", user.Init)      // create user
+	pro.POST("/login", user.Login)    // login(name, pwd) -> token
+	pro.GET("/auth", user.LoginByKey) // login(key) -> token
 
 	// private api
 	pri := b.Group("/private")

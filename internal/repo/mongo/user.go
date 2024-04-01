@@ -57,6 +57,17 @@ func PullUserByName(coll *mongo.Collection, name string) (model.User, error) {
 	return user, err
 }
 
+func PullUserByKey(coll *mongo.Collection, key string) (model.User, error) {
+	var user model.User
+	err := coll.FindOne(nil, bson.M{"person.key": key}).Decode(&user)
+	if err != nil {
+		zap.L().Debug("failed to find user", zap.Error(err))
+		return model.User{}, err
+	}
+	zap.L().Debug("user found", zap.Any("id", user.ID))
+	return user, err
+}
+
 func PushUser(coll *mongo.Collection, user model.User) (model.User, error) {
 	user.ServerRecord.Update = time.Now().Unix()
 	_, err := coll.ReplaceOne(nil, bson.M{"_id": user.ID}, user)

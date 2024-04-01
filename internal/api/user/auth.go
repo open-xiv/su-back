@@ -69,17 +69,13 @@ func LoginByKey(c echo.Context) error {
 		zap.L().Debug("failed to bind person", zap.Error(err))
 		return err
 	}
-	name := person.Name
 	key := person.Key
 
 	// check in mongo
 	client := c.Get("mongo").(*mongo.Client)
 	coll := client.Database("subook").Collection("users")
-	user, err := rmongo.PullUserByName(coll, name)
+	user, err := rmongo.PullUserByKey(coll, key)
 	if err != nil {
-		return echo.ErrUnauthorized
-	}
-	if user.Person.Key != key {
 		return echo.ErrUnauthorized
 	}
 

@@ -9,7 +9,7 @@ import (
 func Status(c echo.Context) error {
 	status := model.ServerStatus{
 		Status:  "Working",
-		Version: "v0.1.0",
+		Version: "v0.1.1",
 	}
 	return c.JSONPretty(http.StatusOK, status, "  ")
 }

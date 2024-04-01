@@ -29,11 +29,12 @@ type Area struct {
 }
 
 type Player struct {
-	Op    Oper   `json:"op" bson:"op"`
-	ID    string `json:"id" bson:"id"`
-	Name  string `json:"name" bson:"name"`
-	Job   Job    `json:"job" bson:"job"`
-	Level int    `json:"level" bson:"level"`
+	Op     Oper   `json:"op" bson:"op"`
+	ID     string `json:"id" bson:"id"`
+	Name   string `json:"name" bson:"name"`
+	Server string `json:"server" bson:"server"`
+	Job    Job    `json:"job" bson:"job"`
+	Level  int    `json:"level" bson:"level"`
 }
 
 type FightRecord struct {

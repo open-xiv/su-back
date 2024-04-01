@@ -112,7 +112,7 @@ func PullAvatar(c echo.Context) error {
 	avatarURL := user.Person.AvatarURL
 	if avatarURL == "" {
 		// use gravatar (email md5)
-		avatarURL = "https://www.gravatar.com/avatar/" + fmt.Sprintf("%x", md5.Sum([]byte(user.Person.Email))) + "?d=identicon"
+		avatarURL = "https://www.gravatar.com/avatar/" + fmt.Sprintf("%x", md5.Sum([]byte(user.Person.Email)))
 	}
 
 	// return user meta
